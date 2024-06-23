@@ -80,7 +80,7 @@ jobs:
 
     - name: Migrate database
       run: |
-        cd HotelSystem/HotelManageSystemBackend
+        cd HotelManageSystemBackend
         python manage.py makemigrations hotel
         python manage.py migrate hotel
         python manage.py migrate
@@ -94,7 +94,7 @@ jobs:
 
     - name: Run Django server
       run: |
-        cd HotelSystem/HotelManageSystemBackend
+        cd HotelManageSystemBackend
         nohup python manage.py runserver 0.0.0.0:8000 &
 
     - name: Set up Node.js
@@ -104,10 +104,10 @@ jobs:
 
     - name: Install frontend dependencies
       run: |
-        cd HotelSystem/HotelManageSystemFront
+        cd HotelManageSystemFront
         npm install || npm install --force
 
     - name: Start frontend server
       run: |
-        cd HotelSystem/HotelManageSystemFront
+        cd HotelManageSystemFront
         npm run dev
