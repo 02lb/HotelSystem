@@ -1,0 +1,84 @@
+name: Deploy HotelSystem
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      DB_NAME: python_hotel
+      DB_USER: hotel_admin
+      DB_PASSWORD: hotel0601
+      MYSQL_ROOT_PASSWORD: libo8657
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Conda
+      uses: goanpeca/setup-miniconda@v2
+      with:
+        python-version: 3.8
+        auto-update-conda: true
+        environment-file: HotelSystem/HotelManageSystemBackend/environment.yml
+        activate-environment: hotel
+
+    - name: Install Python dependencies
+      run: |
+        cd HotelSystem/HotelManageSystemBackend
+        pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+
+    - name: Set up MySQL
+      uses: mirromutth/mysql-action@v1.2.1
+      with:
+        mysql database: ${{ env.DB_NAME }}
+        mysql user: ${{ env.DB_USER }}
+        mysql password: ${{ env.DB_PASSWORD }}
+        root password: ${{ env.MYSQL_ROOT_PASSWORD }}
+
+    - name: Create database and user
+      run: |
+        mysql -u root -p${{ env.MYSQL_ROOT_PASSWORD }} <<EOF
+        CREATE DATABASE IF NOT EXISTS ${{ env.DB_NAME }};
+        CREATE USER IF NOT EXISTS '${{ env.DB_USER }}'@'localhost' IDENTIFIED BY '${{ env.DB_PASSWORD }}';
+        GRANT ALL PRIVILEGES ON ${{ env.DB_NAME }}.* TO '${{ env.DB_USER }}'@'localhost';
+        FLUSH PRIVILEGES;
+        EOF
+
+    - name: Migrate database
+      run: |
+        cd HotelSystem/HotelManageSystemBackend
+        python manage.py makemigrations hotel
+        python manage.py migrate hotel
+        python manage.py migrate
+
+    - name: Insert admin user
+      run: |
+        mysql -u root -p${{ env.MYSQL_ROOT_PASSWORD }} <<EOF
+        USE ${{ env.DB_NAME }};
+        INSERT INTO b_user (id, password, admin_token, status, username, role) VALUES (1, '21232f297a57a5a743894a0e4a801fc3', '21232f297a57a5a743894a0e4a801fc3', 0, 'admin', 1);
+        EOF
+
+    - name: Run Django server
+      run: |
+        cd HotelSystem/HotelManageSystemBackend
+        nohup python manage.py runserver 0.0.0.0:8000 &
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: 14
+
+    - name: Install frontend dependencies
+      run: |
+        cd HotelSystem/HotelManageSystemFront
+        npm install || npm install --force
+
+    - name: Start frontend server
+      run: |
+        cd HotelSystem/HotelManageSystemFront
+        npm run dev
