@@ -35,6 +35,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: List repository contents
+      run: ls -R
+
     - name: Set up Conda
       uses: goanpeca/setup-miniconda@v2
       with:
@@ -56,7 +59,8 @@ jobs:
     - name: Install Python dependencies
       run: |
         cd HotelSystem/HotelManageSystemBackend
-        pip install -r requirements.txt 
+        ls
+        pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 
     - name: Wait for MySQL to be ready
       run: |
