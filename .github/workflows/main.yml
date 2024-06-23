@@ -58,9 +58,9 @@ jobs:
 
     - name: Install Python dependencies
       run: |
-        cd HotelSystem/HotelManageSystemBackend
+        cd HotelManageSystemBackend
         ls
-        pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+        pip install -r requirements.txt 
 
     - name: Wait for MySQL to be ready
       run: |
