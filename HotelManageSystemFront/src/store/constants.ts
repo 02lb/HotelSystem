@@ -1,6 +1,6 @@
 // api根路径 需要和pycharm的一致
-const BASE_URL = 'http://hotel-backend.natapp1.cc' //隧道
-// const BASE_URL = "http://127.0.0.1:8000" //本地
+//const BASE_URL = 'http://hotel-backend.natapp1.cc' //隧道
+const BASE_URL = "http://127.0.0.1:8000" //本地
 
 const USER_ID = 'user_id'
 const USER_NAME = 'user_name'
