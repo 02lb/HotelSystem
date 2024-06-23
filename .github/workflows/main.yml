@@ -9,6 +9,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+          MYSQL_USER: ${{ secrets.DB_USER }}
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     env:
       DB_NAME: python_hotel
       DB_USER: hotel_admin
@@ -20,23 +36,29 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set up Conda
-      uses: actions/setup-python@v2
+      uses: goanpeca/setup-miniconda@v2
       with:
         python-version: 3.8
+        auto-update-conda: true
 
-    - name: Create Conda environment
+    - name: Create and activate Conda environment
       run: |
-        conda create -n hotel python=3.8
+        conda create -n hotel python=3.8 -y
+        echo "conda activate hotel" >> ~/.bashrc
+        source ~/.bashrc
         conda activate hotel
-        pip install -r HotelSystem/HotelManageSystemBackend/requirements.txt 
 
-    - name: Set up MySQL
-      uses: mysql-actions/mysql-setup@v1
-      with:
-        mysql database: ${{ env.DB_NAME }}
-        mysql user: ${{ env.DB_USER }}
-        mysql password: ${{ env.DB_PASSWORD }}
-        root password: ${{ env.MYSQL_ROOT_PASSWORD }}
+    - name: Install Python dependencies
+      run: |
+        cd HotelSystem/HotelManageSystemBackend
+        pip install -r requirements.txt 
+
+    - name: Wait for MySQL to be ready
+      run: |
+        until mysqladmin ping -h "127.0.0.1" --silent; do
+          echo 'waiting for mysql to be ready...'
+          sleep 3
+        done
 
     - name: Create database and user
       run: |
@@ -74,9 +96,4 @@ jobs:
     - name: Install frontend dependencies
       run: |
         cd HotelSystem/HotelManageSystemFront
-        npm install || npm install --force
-
-    - name: Start frontend server
-      run: |
-        cd HotelSystem/HotelManageSystemFront
-        npm run dev
+        npm instal
