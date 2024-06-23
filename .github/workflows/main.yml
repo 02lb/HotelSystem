@@ -1,4 +1,4 @@
-name: Deploy HotelSystem
+name: Deploy HotelSystem for CI
 
 on:
   push:
@@ -59,7 +59,6 @@ jobs:
     - name: Install Python dependencies
       run: |
         cd HotelManageSystemBackend
-        ls
         pip install -r requirements.txt 
 
     - name: Wait for MySQL to be ready
@@ -110,4 +109,7 @@ jobs:
     - name: Start frontend server
       run: |
         cd HotelManageSystemFront
-        npm run dev
+        nohup npm run dev &
+        
+    - name: Sleep for 30 seconds to ensure servers start
+      run: sleep 30s
