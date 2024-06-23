@@ -41,6 +41,11 @@ jobs:
         python-version: 3.8
         auto-update-conda: true
 
+    - name: Initialize Conda
+      run: |
+        conda init bash
+        source ~/.bashrc
+
     - name: Create and activate Conda environment
       run: |
         conda create -n hotel python=3.8 -y
@@ -96,4 +101,9 @@ jobs:
     - name: Install frontend dependencies
       run: |
         cd HotelSystem/HotelManageSystemFront
-        npm instal
+        npm install || npm install --force
+
+    - name: Start frontend server
+      run: |
+        cd HotelSystem/HotelManageSystemFront
+        npm run dev
