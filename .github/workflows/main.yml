@@ -33,7 +33,7 @@ jobs:
         pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 
     - name: Set up MySQL
-      uses: mirromutth/mysql-action@v1.2.1
+      uses: mysql-actions/mysql-setup@v1
       with:
         mysql database: ${{ env.DB_NAME }}
         mysql user: ${{ env.DB_USER }}
