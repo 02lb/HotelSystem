@@ -2,9 +2,9 @@
 
 ### 项目demo访问地址：
 
-+ **前台：**http://hotelmanage.nat300.top/index/portal（ 登陆帐号密码均：james）
++ 前台：http://hotelmanage.nat300.top/index/portal (登陆帐号密码均：james）
 
-+ **后台：**http://hotelmanage.nat300.top/admin/thing （登陆帐号密码均：admin）
++ 后台：http://hotelmanage.nat300.top/admin/thing （登陆帐号密码均：admin）
 
 ### 项目部分效果展示
 
