@@ -1,0 +1,115 @@
+name: Deploy HotelSystem for CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+          MYSQL_USER: ${{ secrets.DB_USER }}
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    env:
+      DB_NAME: python_hotel
+      DB_USER: hotel_admin
+      DB_PASSWORD: hotel0601
+      MYSQL_ROOT_PASSWORD: libo8657
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: List repository contents
+      run: ls -R
+
+    - name: Set up Conda
+      uses: goanpeca/setup-miniconda@v2
+      with:
+        python-version: 3.8
+        auto-update-conda: true
+
+    - name: Initialize Conda
+      run: |
+        conda init bash
+        source ~/.bashrc
+
+    - name: Create and activate Conda environment
+      run: |
+        conda create -n hotel python=3.8 -y
+        echo "conda activate hotel" >> ~/.bashrc
+        source ~/.bashrc
+        conda activate hotel
+
+    - name: Install Python dependencies
+      run: |
+        cd HotelManageSystemBackend
+        pip install -r requirements.txt 
+
+    - name: Wait for MySQL to be ready
+      run: |
+        until mysqladmin ping -h "127.0.0.1" --silent; do
+          echo 'waiting for mysql to be ready...'
+          sleep 3
+        done
+
+    - name: Create database and user
+      run: |
+        mysql -h 127.0.0.1 -u root -p${{ env.MYSQL_ROOT_PASSWORD }} <<EOF
+        CREATE DATABASE IF NOT EXISTS ${{ env.DB_NAME }};
+        CREATE USER IF NOT EXISTS '${{ env.DB_USER }}'@'localhost' IDENTIFIED BY '${{ env.DB_PASSWORD }}';
+        GRANT ALL PRIVILEGES ON ${{ env.DB_NAME }}.* TO '${{ env.DB_USER }}'@'localhost';
+        FLUSH PRIVILEGES;
+        EOF
+
+    - name: Migrate database
+      run: |
+        cd HotelManageSystemBackend
+        python manage.py makemigrations hotel
+        python manage.py migrate hotel
+        python manage.py migrate
+
+    - name: Insert admin user
+      run: |
+        mysql -h 127.0.0.1 -u root -p${{ env.MYSQL_ROOT_PASSWORD }} <<EOF
+        USE ${{ env.DB_NAME }};
+        INSERT INTO b_user (id, password, admin_token, status, username, role) VALUES (1, '21232f297a57a5a743894a0e4a801fc3', '21232f297a57a5a743894a0e4a801fc3', 0, 'admin', 1);
+        EOF
+
+    - name: Run Django server
+      run: |
+        cd HotelManageSystemBackend
+        nohup python manage.py runserver 0.0.0.0:8000 &
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: 14
+
+    - name: Install frontend dependencies
+      run: |
+        cd HotelManageSystemFront
+        npm install || npm install --force
+
+    - name: Start frontend server
+      run: |
+        cd HotelManageSystemFront
+        nohup npm run dev &
+        
+    - name: Sleep for 30 seconds to ensure servers start
+      run: sleep 30s
