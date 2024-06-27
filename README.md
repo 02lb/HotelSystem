@@ -19,7 +19,8 @@
 + 后台客房管理：
 
 ![](docx/figures/系统运行截图/客房管理.png)
-<<<<<<< develop
+
+
 
 ### Docker 自动部署：
 
@@ -64,5 +65,4 @@ DB_PASSWORD=hotel0601
 $ docker-compose up -d --build
 ```
 
-=======
->>>>>>> main
+
