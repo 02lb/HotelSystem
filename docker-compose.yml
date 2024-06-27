@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: libo8657
+      MYSQL_DATABASE: python_hotel
+      MYSQL_USER: hotel_admin
+      MYSQL_PASSWORD: hotel0601
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  backend:
+    build:
+      context: ./HotelManageSystemBackend
+    environment:
+      DB_NAME: python_hotel
+      DB_USER: hotel_admin
+      DB_PASSWORD: hotel0601
+      DB_HOST: db
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./HotelManageSystemBackend:/app
+    command: >
+      bash -c "
+        python manage.py makemigrations hotel &&
+        python manage.py migrate hotel &&
+        python manage.py migrate &&
+        mysql -u root -plib0987 -e \"
+          INSERT INTO b_user (id, password, admin_token, status, username, role)
+          VALUES (1, '21232f297a57a5a743894a0e4a801fc3', '21232f297a57a5a743894a0e4a801fc3', 0, 'admin', 1);\"
+        python manage.py runserver 0.0.0.0:8000
+      "
+
+  frontend:
+    build:
+      context: ./HotelManageSystemFront
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./HotelManageSystemFront:/app
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
